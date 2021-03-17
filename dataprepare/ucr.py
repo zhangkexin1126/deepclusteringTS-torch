@@ -81,7 +81,7 @@ def load_ucr(dataset_name: str):
     return data
 
 if __name__ == '__main__':
-    # ucr_prepare()
+    ucr_prepare()
     # ACSF1
     dataname = 'ACSF1'
     load_ucr(dataname)

@@ -135,14 +135,47 @@ def te_prepare():
     else:
         print('faulttest/ exists')
 
+def load_te():
+    filetype = ['faultfreetrain', 'faulttrain', 'faultfreetest', 'faulttest']
+
+    filepath = os.path.join(abspath, 'data/te', filetype[0])
+    print('-- filepath')
+    faultfreetrain = {}
+    for file in os.listdir(filepath):
+        data = pd.read_csv(os.path.join(filepath, file))
+        faultfreetrain[file[0:-4]] = data
+
+    filepath = os.path.join(abspath, 'data/te', filetype[1])
+    print('-- filepath')
+    faulttrain = {}
+    for file in os.listdir(filepath):
+        data = pd.read_csv(os.path.join(filepath, file))
+        faulttrain[file[0:-4]] = data
+
+    filepath = os.path.join(abspath, 'data/te', filetype[2])
+    print('-- filepath')
+    faultfreetest = {}
+    for file in os.listdir(filepath):
+        data = pd.read_csv(os.path.join(filepath, file))
+        faultfreetest[file[0:-4]] = data
+
+    filepath = os.path.join(abspath, 'data/te', filetype[3])
+    print('-- filepath')
+    faulttest = {}
+    for file in os.listdir(filepath):
+        data = pd.read_csv(os.path.join(filepath, file))
+        faulttest[file[0:-4]] = data
+
+    return faultfreetrain, faulttrain, faultfreetest, faulttest
+
 if __name__ == '__main__':
     starttime = time.time()
     print('---------------------------------------')
     print('Running Python file: te.py')
     print('---------------------------------------')
 
-    te_prepare()
-
+    # te_prepare()
+    faultfreetrain, faulttrain, faultfreetest, faulttest = load_te()
     endtime = time.time()
     print('---------------------------------------')
     print('Finish')

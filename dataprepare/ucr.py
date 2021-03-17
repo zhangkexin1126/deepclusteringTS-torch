@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 import os
+from sktime.utils.data_io import load_from_ucr_tsv_to_dataframe
 
+# https://github.com/alan-turing-institute/sktime/blob/master/examples/loading_data.ipynb
 abspath = os.path.abspath('..')
 print(abspath)
 

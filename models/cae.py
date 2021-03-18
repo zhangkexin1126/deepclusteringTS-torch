@@ -11,6 +11,7 @@ from dataprepare import mnist
 import torch
 import torch.nn as nn
 from torch import optim
+from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 from tqdm import tqdm
@@ -79,12 +80,14 @@ class CAE(nn.Module):
 def CAE_train(model, train_x, train_y, validation: Optional[Dataset],
               train_epochs: int,
               batch_size: int,
+              device: str,
               optimizer: optim.Optimizer,
               loss_func: nn = nn.MSELoss(),
               scheduler: Any = None,
               cuda: bool = True,
               sampler: Optional[torch.utils.data.sampler.Sampler] = None,
               silent: bool = False):
+
     train_dl = utils.generate_dataloader(train_x,
                                          batch_size=batch_size,
                                          pin_memory=False,
@@ -99,9 +102,7 @@ def CAE_train(model, train_x, train_y, validation: Optional[Dataset],
     else:
         validation_dl = None
         validation_loss_value = -1
-    if cuda:
-        model.cuda()
-    train_loss = 0
+    model.to(device) # GPU or CPU
     for epo in range(train_epochs):
         data_iterator = tqdm(
             train_dl,
@@ -113,8 +114,7 @@ def CAE_train(model, train_x, train_y, validation: Optional[Dataset],
         for idx, batch in enumerate(data_iterator):
             if (isinstance(batch, tuple) or isinstance(batch, list) and len(batch) in [1, 2]):
                 batch = batch[0]
-            if cuda:
-                batch = batch.cuda(non_blocking=True)
+            batch = batch.to(device)
             batch = mnist.reshape_mnist_cnn(batch).float()
             output = model(batch)
             #print(output.dtype, batch.dtype)
@@ -123,7 +123,7 @@ def CAE_train(model, train_x, train_y, validation: Optional[Dataset],
             train_loss = loss.item()
             optimizer.zero_grad()
             loss.backward()
-            optimizer.step(closure=None)
+            optimizer.step()
             data_iterator.set_postfix(
                 epo=epo, training_loss="%.4f" % train_loss, validation_loss="%.4f" % validation_loss_value,
             )
@@ -132,8 +132,36 @@ def CAE_train(model, train_x, train_y, validation: Optional[Dataset],
             scheduler.step()
 
 
-def CAE_predict(model, x, y):
-    pass
+def CAE_predict(model, x, y,
+                batch_size: int,
+                device: str,
+                encode: bool=True,
+                silent: bool = False):
+    test_dl = utils.generate_dataloader(x,
+                                         batch_size=batch_size,
+                                         pin_memory=False,
+                                         sampler=None,
+                                         shuffle=False)
+    model.to(device)
+    model.eval()
+    data_iterator = tqdm(test_dl, leave=False, unit="batch", disable=silent)
+    embedded_layers = []
+    for batch in data_iterator:
+        if isinstance(batch, tuple) or isinstance(batch, list) and len(batch) in [1, 2]:
+            batch = batch[0]
+        if (isinstance(batch, tuple) or isinstance(batch, list) and len(batch) in [1, 2]):
+            batch = batch[0]
+        batch = batch.to(device)
+        batch = mnist.reshape_mnist_cnn(batch).float()
+        if encode:
+            output = model.encode(batch)
+        else:
+            output = model(batch)
+        embedded_layers.append(output.detach().cpu())
+    feat = torch.cat(embedded_layers, dim=0)
+    model.train()
+    return feat
+
 
 
 if __name__ == "__main__":
@@ -142,25 +170,37 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    x = torch.rand(10,2,28,28)
+    '''x = torch.rand(10,2,28,28)
     cae = CAE(CNNEncoder(in_channel=2), CNNDecoder(out_channel=2))
     print('Input shape -->', x.shape)
     h = cae.encode(x)
     print('Embedded shape -->', h.shape)
     rec = cae(x)
-    print('Rec shape -->', rec.shape)
-
+    print('Rec shape -->', rec.shape)'''
     ## Train
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print('-loginfo -> ', device)
     train_x, train_y, test_x, test_y, x_all, y_all, ds_all = mnist.load_mnist_ds()
-
     model = CAE(CNNEncoder(in_channel=1), CNNDecoder(out_channel=1))
+    model_optim = optim.Adam(model.parameters(), lr=0.001)
+    loss_func = nn.MSELoss()
     CAE_train(model=model,
               train_x=train_x,
               train_y=train_y,
               validation=None,
-              train_epochs=50,
+              train_epochs=5,
               batch_size=256,
-              optimizer=optim.Adam(model.parameters(), lr=0.001))
+              device=device,
+              optimizer=model_optim,
+              loss_func=loss_func,
+              scheduler=lr_scheduler.StepLR(model_optim, 50, gamma=0.1))
 
+    pred = CAE_predict(model=model,
+                       x=test_x,
+                       y=test_y,
+                       batch_size=256,
+                       device=device,
+                       encode=True)
+    print(pred.shape)
 
 

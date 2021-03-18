@@ -20,8 +20,8 @@ def load_mnist_ds():
     ds_train = MNIST(root=os.path.join(abspath,'data/mnist'), train=True, transform=transform, download=True)
     ds_test = MNIST(root=os.path.join(abspath,'data/mnist'), train=False, transform=transform, download=True)
     ds_all = ConcatDataset((ds_train, ds_test))
-    x_train, y_train = ds_train.train_data, ds_train.train_labels
-    x_test, y_test = ds_test.test_data, ds_test.test_labels
+    x_train, y_train = ds_train.data, ds_train.targets
+    x_test, y_test = ds_test.data, ds_test.targets
     x_all = torch.cat((x_train, x_test), 0)
     y_all = torch.cat((y_train, y_test), 0)
     x_all = np.divide(x_all, 255.)

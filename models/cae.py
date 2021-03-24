@@ -131,7 +131,6 @@ def CAE_train(model, train_x, train_y, validation: Optional[Dataset],
         if scheduler is not None:
             scheduler.step()
 
-
 def CAE_predict(model, x, y,
                 batch_size: int,
                 device: str,

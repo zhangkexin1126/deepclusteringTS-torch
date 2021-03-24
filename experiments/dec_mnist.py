@@ -17,15 +17,15 @@ from utils import cluster_accuracy
 @click.option(
     "--batch_size", help="training batch size (default 128).", type=int, default=256)
 @click.option(
-    "--ae_pretrain_epochs", help="number of pretraining epochs (default 300).", type=int, default=50)
+    "--ae_pretrain_epochs", help="number of pretraining epochs (default 300).", type=int, default=3)
 @click.option(
-    "--ae_train_epochs", help="number of training epochs (default 300).", type=int, default=50)
+    "--ae_train_epochs", help="number of training epochs (default 300).", type=int, default=3)
 @click.option(
     "--cluster_num", help="number of clusters (default 2).", type=int, default=10)
 @click.option(
     "--hidden_dim", help="dimension of hidden (default 2).", type=int, default=10)
 @click.option(
-    "--dec_train_epochs", help="dimension of hidden (default 2).", type=int, default=50)
+    "--dec_train_epochs", help="dimension of hidden (default 2).", type=int, default=3)
 
 def experiment(cuda,
                batch_size,

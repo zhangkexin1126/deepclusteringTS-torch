@@ -21,12 +21,12 @@ def load_mnist_ds():
     ds_test = MNIST(root=os.path.join(abspath,'data/mnist'), train=False, transform=transform, download=True)
     ds_all = ConcatDataset((ds_train, ds_test))
     x_train, y_train = ds_train.data, ds_train.targets
-    x_test, y_test = ds_test.data, ds_test.targets
     x_train = np.divide(x_train, 255.)
+    x_test, y_test = ds_test.data, ds_test.targets
     x_test = np.divide(x_test, 255.)
+
     x_all = torch.cat((x_train, x_test), 0)
     y_all = torch.cat((y_train, y_test), 0)
-    #x_all = np.divide(x_all, 255.)
     return x_train, y_train, x_test, y_test, x_all, y_all, ds_all
 
 def reshape_mnist_mlp(batch: torch.Tensor) -> torch.Tensor:
@@ -43,3 +43,4 @@ def reshape_mnist_rnn(batch: torch.Tensor) -> torch.Tensor:
 if __name__ == "__main__":
     x_train, y_train, x_test, y_test, x_all, y_all, ds_all = load_mnist_ds()
     print(x_train[0])
+    print(len(x_test))
